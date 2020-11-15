@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const port = 8080
 app.use(express.urlencoded());
 
-const data = require('./initialData.js');
+const studentArray = require('./initialstudentArray.js');
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }))
@@ -12,12 +12,12 @@ app.use(bodyParser.json())
 // your code goes here
 
 app.get('/api/student',(req,res) => {
-    res.send(data);
+    res.send(studentArray);
 });
 
 app.get('/api/student/:id',(req,res) => {
     const id = req.params.id;
-    const student = data.find((student) => student.id === parseInt(id));
+    const student = studentArray.find((student) => student.id === parseInt(id));
     if(!student) {
         res.status(404);
         return;
@@ -33,19 +33,19 @@ app.post('/api/student',(req,res) => {
         return;
     }
     const newStudent = {
-        id: data.length + 1,
+        id: studentArray.length + 1,
         name: name,
         currentClass: currentClass,
         division: division
     }
-    data.push(newStudent);
+    studentArray.push(newStudent);
     res.send(newStudent.id);
 
 });
 
 app.put('/api/student/:id',(req,res) => {
     const id = req.params.id;
-    const student = data.find(student => student.id === parseInt(id));
+    const student = studentArray.find(student => student.id === parseInt(id));
     const newName = req.body.name;
     if((!student) || (!newName)) {
         res.status(400);
@@ -57,12 +57,12 @@ app.put('/api/student/:id',(req,res) => {
 
 app.delete('/api/student/:id',(req,res) => {
     const id = req.params.id;
-    const studentIndex = data.findIndex((student) => parseInt(id) === student.id);
+    const studentIndex = studentArray.findIndex((student) => parseInt(id) === student.id);
     if(studentIndex === -1) {
         res.status(400);
         return;
     }
-    data.splice(studentIndex,1);
+    studentArray.splice(studentIndex,1);
 })
 app.listen(port, () => console.log(`App listening on port ${port}!`))
 
