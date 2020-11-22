@@ -1,70 +1,101 @@
 const express = require('express')
+
+const students = require('./InitialData')
+
 const app = express()
 const bodyParser = require("body-parser");
+const { json } = require('express');
 const port = 8080
 app.use(express.urlencoded());
 
-const data = require('./InitialData.js');
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
 // your code goes here
 
-app.get('/api/student',(req,res) => {
-    res.send(data);
+app.get('/api/student', (request, response)=>{   //whole data
+    response.send(students);
 });
 
-app.get('/api/student/:id',(req,res) => {
-    const id = req.params.id;
-    const student = data.find((student) => student.id === parseInt(id));
-    if(!student) {
-        res.status(404);
+let idProp = students.length;
+
+app.get('/api/student/:id', (request, response)=>{   //get by id
+    const id = parseInt(request.params.id);
+    console.log(id);
+    if(isNaN(id)){
+        response.sendStatus(404);
+        console.log('pp');
         return;
     }
-    res.send(student);
 
+    const student = students.find(stud=>stud.id === id);
+    if(!student){
+        response.sendStatus(404);
+        return;
+    }     
+    response.send(student);
 });
-
-app.post('/api/student',(req,res) => {
-    const {name, currentClass, division} = req.body;
-    if((!name) || (!currentClass) || (!division)) {
-        res.status(400);
+app.post('/api/student',(request, response)=>{
+    const newStudent = request.body;
+    if(!newStudent.name || !newStudent.currentClass || !newStudent.division){
+        response.sendStatus(400);
         return;
     }
-    const newStudent = {
-        id: data.length + 1,
-        name: name,
-        currentClass: currentClass,
-        division: division
-    }
-    data.push(newStudent);
-    res.send(newStudent.id);
 
+    students.push({
+        id: idProp+1,
+        name: newStudent.name,
+        currentClass: parseInt(newStudent.currentClass),
+        division: newStudent.division
+    });
+
+    idProp++;
+    response.send({
+        id: idProp
+    });
 });
-
-app.put('/api/student/:id',(req,res) => {
-    const id = req.params.id;
-    const student = data.find(student => student.id === parseInt(id));
-    const newName = req.body.name;
-    if((!student) || (!newName)) { 
-        res.status(400);
+app.put('/api/student/:id', (request, response)=>{
+    const id = parseInt(request.params.id);
+    if(isNaN(id)){
+        response.sendStatus(400);
         return;
     }
-    student.name = newName;
+    const studentIndex = students.findIndex(stud => stud.id === id);
 
+    if(studentIndex === -1){
+        response.sendStatus(400);
+        return;
+    }
+
+    const student = students[studentIndex];
+    if(request.body.name){
+        students[studentIndex].name=request.body.name;
+    }
+    if(request.body.currentClass){
+        students[studentIndex].currentClass=parseInt(request.body.currentClass);
+    }
+    if(request.body.division){
+        students[studentIndex].division=request.body.division;
+    }
+    response.set("content-type", "application/x-www-form-urlencoded");
+    response.send( {name:request.body.name});
 });
-
-app.delete('/api/student/:id',(req,res) => {
-    const id = req.params.id;
-    const studentIndex = data.findIndex((student) => parseInt(id) === student.id);
-    if(studentIndex === -1) {
-        res.status(400);
+app.delete('/api/student/:id', (request, response)=>{
+    const id = parseInt(request.params.id);
+    if(isNaN(id)){
+        response.sendStatus(404);
         return;
     }
+    const studentIndex = students.findIndex(stud => stud.id === id);
     
-    data.splice(studentIndex,1);
-})
+    if(studentIndex === -1){
+        response.sendStatus(404);
+        return;
+    } 
+    students.splice(studentIndex, 1);
+    response.sendStatus(200);
+});
 app.listen(port, () => console.log(`App listening on port ${port}!`))
 
 module.exports = app;   
